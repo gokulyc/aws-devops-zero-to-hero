@@ -1,23 +1,37 @@
 resource "aws_vpc" "myvpc" {
   cidr_block = var.cidr
+  tags = {
+    generatedBy = "Terraform11"
+  }
 }
 
 resource "aws_subnet" "sub1" {
   vpc_id                  = aws_vpc.myvpc.id
   cidr_block              = "10.0.0.0/24"
-  availability_zone       = "us-east-1a"
+  availability_zone       = "ap-south-1a"
   map_public_ip_on_launch = true
+  tags = {
+    Name = "SubnetA"
+    generatedBy = "Terraform11"
+  }
 }
 
 resource "aws_subnet" "sub2" {
   vpc_id                  = aws_vpc.myvpc.id
   cidr_block              = "10.0.1.0/24"
-  availability_zone       = "us-east-1b"
+  availability_zone       = "ap-south-1b"
   map_public_ip_on_launch = true
+  tags = {
+    Name = "SubnetB"
+    generatedBy = "Terraform11"
+  }
 }
 
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.myvpc.id
+  tags = {
+    generatedBy = "Terraform11"
+  }
 }
 
 resource "aws_route_table" "RT" {
@@ -26,6 +40,9 @@ resource "aws_route_table" "RT" {
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.igw.id
+  }
+  tags = {
+    generatedBy = "Terraform11"
   }
 }
 
@@ -66,29 +83,42 @@ resource "aws_security_group" "webSg" {
   }
 
   tags = {
-    Name = "Web-sg"
+    Name        = "Web-sg"
+    generatedBy = "Terraform11"
   }
 }
 
 resource "aws_s3_bucket" "example" {
-  bucket = "abhisheksterraform2023project"
+  bucket = var.s3_unique_name
+  tags = {
+    generatedBy = "Terraform11"
+  }
 }
 
 
 resource "aws_instance" "webserver1" {
-  ami                    = "ami-0261755bbcb8c4a84"
+  ami                    = var.ec2_ami
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.webSg.id]
   subnet_id              = aws_subnet.sub1.id
   user_data              = base64encode(file("userdata.sh"))
+
+  tags = {
+    Name        = "webserver1"
+    generatedBy = "Terraform11"
+  }
 }
 
 resource "aws_instance" "webserver2" {
-  ami                    = "ami-0261755bbcb8c4a84"
+  ami                    = var.ec2_ami
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.webSg.id]
   subnet_id              = aws_subnet.sub2.id
   user_data              = base64encode(file("userdata1.sh"))
+  tags = {
+    Name        = "webserver2"
+    generatedBy = "Terraform11"
+  }
 }
 
 #create alb
@@ -101,7 +131,8 @@ resource "aws_lb" "myalb" {
   subnets         = [aws_subnet.sub1.id, aws_subnet.sub2.id]
 
   tags = {
-    Name = "web"
+    Name        = "webALB"
+    generatedBy = "Terraform11"
   }
 }
 
@@ -114,6 +145,10 @@ resource "aws_lb_target_group" "tg" {
   health_check {
     path = "/"
     port = "traffic-port"
+  }
+  tags = {
+    Name        = "tg"
+    generatedBy = "Terraform11"
   }
 }
 
